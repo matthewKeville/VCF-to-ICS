@@ -50,7 +50,7 @@ import re
 # CONFIGURATION
 
 PROGRAM_NAME = "VCF to ICS"
-PROGRAM_VERSION = "1.0"
+PROGRAM_VERSION = "1.1"
 
 # Command-line interface
 argParser = argparse.ArgumentParser(description=PROGRAM_NAME + " " + PROGRAM_VERSION)
@@ -105,7 +105,8 @@ fileOutput.write("BEGIN:VCALENDAR\nPRODID:-//" + PROGRAM_NAME + "//NONSGML " + s
 for sVCard in sVCards:
 	# "BDAY:--12-01" --> ["BDAY:--12-01", "-", "12", "01"]
 	# "BDAY:2018-12-01" --> ["BDAY:2018-12-01", "2018", "12", "01"]
-	matchBirthday = re.search("BDAY:(\-|\d+)-(\d+)-(\d+)[\s\S]*?", sVCard)
+    # "BDAY;VALUE=DATE:20181201" --> ["BDAY;VALUE=DATE:20181201", "2018", "12", "01"]
+    matchBirthday = re.search("BDAY(?:;VALUE=DATE)?:(\-|\d{4})-?(\d{2})-?(\d{2})[\s\S]*?", sVCard)
 	# "FN:John Doe" --> ["FN:John Doe", "John Doe"]
 	# "FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65" --> ["FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65", "=4A=6F=68=6E=20=44=6F=65"]
 	matchName = re.search("FN(?:\:|;.*:)(.*)[\s\S]*?", sVCard)
