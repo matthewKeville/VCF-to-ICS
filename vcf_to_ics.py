@@ -77,10 +77,10 @@ logger.addHandler(stream_handler)
 # MAIN PROGRAM
 
 if os.path.isfile(sInputPath):
-	logger.info("Input file path : " + sInputPath)
+    logger.info("Input file path : " + sInputPath)
 else:
-	logger.error("Invalid input file path : " + sInputPath)
-	sys.exit(1)
+    logger.error("Invalid input file path : " + sInputPath)
+    sys.exit(1)
 
 # Read VCF file content
 fileInput = open(sInputPath, 'r', encoding='utf-8')
@@ -93,55 +93,56 @@ iVCardNbr = 0
 
 # Write ICS calendar header
 try:
-	fileOutput = open(sOutputPath, 'w', encoding='utf-8')
+    fileOutput = open(sOutputPath, 'w', encoding='utf-8')
 except:
-	logger.error("Invalid output file path : " + sOutputPath)
-	sys.exit(1)
+    logger.error("Invalid output file path : " + sOutputPath)
+    sys.exit(1)
 else:
-	logger.info("Output file path : " + sOutputPath)
+    logger.info("Output file path : " + sOutputPath)
 fileOutput.write("BEGIN:VCALENDAR\nPRODID:-//" + PROGRAM_NAME + "//NONSGML " + sCalendarName + " V1.0//EN\nX-WR-CALNAME:" + sCalendarName + "\nVERSION:2.0\n")
 
 # Parse VCards
 for sVCard in sVCards:
-	# "BDAY:--12-01" --> ["BDAY:--12-01", "-", "12", "01"]
-	# "BDAY:2018-12-01" --> ["BDAY:2018-12-01", "2018", "12", "01"]
+    # "BDAY:--12-01" --> ["BDAY:--12-01", "-", "12", "01"]
+    # "BDAY:2018-12-01" --> ["BDAY:2018-12-01", "2018", "12", "01"]
     # "BDAY;VALUE=DATE:20181201" --> ["BDAY;VALUE=DATE:20181201", "2018", "12", "01"]
     matchBirthday = re.search("BDAY(?:;VALUE=DATE)?:(\-|\d{4})-?(\d{2})-?(\d{2})[\s\S]*?", sVCard)
-	# "FN:John Doe" --> ["FN:John Doe", "John Doe"]
-	# "FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65" --> ["FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65", "=4A=6F=68=6E=20=44=6F=65"]
-	matchName = re.search("FN(?:\:|;.*:)(.*)[\s\S]*?", sVCard)
-	if (matchBirthday is not None) and (matchName is not None):
-		# Contact birthday
-		if matchBirthday.group(1) == "-":
-			# Replace "-" by current year
-			# ["BDAY:--12-01", "-", "12", "01"] --> 20181201
-			sBirthday = time.strftime("%Y") + matchBirthday.group(2) + matchBirthday.group(3)
-		else:
-			# ["BDAY:2018-12-01", "2018", "12", "01"] --> 20181201
-			sBirthday = matchBirthday.group(1) + matchBirthday.group(2) + matchBirthday.group(3)
-		# Contact name
-		try:
-			# Try to decode Quoted-Printable
-			# ["FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65", "=4A=6F=68=6E=20=44=6F=65"] --> "John Doe"
-			sName = quopri.decodestring(matchName.group(1)).decode('utf-8')
-		except:
-			# ["FN:John Doe", "John Doe"] --> "John Doe"
-			sName = matchName.group(1)
+    # "FN:John Doe" --> ["FN:John Doe", "John Doe"]
+    # "FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65" --> ["FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65", "=4A=6F=68=6E=20=44=6F=65"]
+    matchName = re.search("FN(?:\:|;.*:)(.*)[\s\S]*?", sVCard)
+    if (matchBirthday is not None) and (matchName is not None):
+        # Contact birthday
+        if matchBirthday.group(1) == "-":
+            # Replace "-" by current year
+            # ["BDAY:--12-01", "-", "12", "01"] --> 20181201
+            sBirthday = time.strftime("%Y") + matchBirthday.group(2) + matchBirthday.group(3)
+        else:
+            # ["BDAY:2018-12-01", "2018", "12", "01"] --> 20181201
+            sBirthday = matchBirthday.group(1) + matchBirthday.group(2) + matchBirthday.group(3)
 
-		logger.info(str(sName) + " : " + str(sBirthday))
-		iVCardNbr = iVCardNbr + 1
+        # Contact name
+        try:
+            # Try to decode Quoted-Printable
+            # ["FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:=4A=6F=68=6E=20=44=6F=65", "=4A=6F=68=6E=20=44=6F=65"] --> "John Doe"
+            sName = quopri.decodestring(matchName.group(1)).decode('utf-8')
+        except:
+            # ["FN:John Doe", "John Doe"] --> "John Doe"
+            sName = matchName.group(1)
 
-		# Unique ID
-		sUID = sBirthday + "-" + ''.join([random.choice(list(ascii_letters + digits)) for _ in range(16)]) + "@VCFtoICS.com"
+        logger.info(str(sName) + " : " + str(sBirthday))
+        iVCardNbr = iVCardNbr + 1
 
-		# Write ICS event
-		fileOutput.write("BEGIN:VEVENT\nDTSTART:" + sBirthday + "\nSUMMARY:" + sName + "\nRRULE:FREQ=YEARLY\nDURATION:P1D\nUID:" + sUID + "\nEND:VEVENT\n")
+        # Unique ID
+        sUID = sBirthday + "-" + ''.join([random.choice(list(ascii_letters + digits)) for _ in range(16)]) + "@VCFtoICS.com"
+
+        # Write ICS event
+        fileOutput.write("BEGIN:VEVENT\nDTSTART:" + sBirthday + "\nSUMMARY:" + sName + "\nRRULE:FREQ=YEARLY\nDURATION:P1D\nUID:" + sUID + "\nEND:VEVENT\n")
 
 if (iVCardNbr > 0):
-	logger.info(str(iVCardNbr) + " VCards found")
+    logger.info(str(iVCardNbr) + " VCards found")
 else:
-	logger.info("No VCard found")
+    logger.info("No VCard found")
 
 # Write ICS calendar footer
 fileOutput.write("END:VCALENDAR")
-fileOutput.close
+fileOutput.close()
