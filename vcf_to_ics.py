@@ -143,8 +143,10 @@ if (iVCardNbr > 0):
 else:
     logger.info("No VCard found")
     # don't write a file, if no vcards with birthdays found
+    fileOutput.flush()
     fileOutput.close()
     os.remove(sOutputPath)
+    logger.info("ics removed")
     exit(0)
 
 # Write ICS calendar footer
