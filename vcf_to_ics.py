@@ -142,6 +142,8 @@ if (iVCardNbr > 0):
     logger.info(str(iVCardNbr) + " VCards found")
 else:
     logger.info("No VCard found")
+    fileOutput.close()
+    exit(0)
 
 # Write ICS calendar footer
 fileOutput.write("END:VCALENDAR")
